@@ -1,5 +1,6 @@
 var Bridge = require('./bridge/bridge.js');
 var bridge = new Bridge({apiKey:"abcdefgh"});
+var speech = require('./speech.js').speech;
 bridge.connect();
 var cleverbot;
 bridge.getService('cleverbot',function(obj){
@@ -36,12 +37,13 @@ record.stdout.on('data', function (d) {
             temp.on('exit',function(code){
               var temp2 = spawn('sox',['temp.flac','-c','1','final.flac']);
               temp2.on('exit',function(code){
-                var speech = spawn('node',['speech.js','final.flac']);
-                speech.stdout.on('data',function(data){
-                  var output = data.toString('ascii').trim();
-                  console.log("YOU SAID: "+data.toString('ascii').trim());
-                  cleverbot.ask(output,function(response){
-                    console.log("HE SAYS: "+response);
+                fs.readFile('final.flac',function(err, data){
+                  speech.query(data,function(output){
+                    console.log("YOU SAID: "+output);
+                    cleverbot.ask(output,function(response){
+                      console.log("HE SAYS: "+response);
+                      var temp2 = spawn('espeak',["'"+response+"'",'--punct="<characters>"']);
+                    });
                   });
                 });
               });
