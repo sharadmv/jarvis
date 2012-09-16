@@ -2,6 +2,7 @@ var Bridge = require('./bridge/bridge.js');
 var bridge = new Bridge({apiKey:"abcdefgh"});
 var speech = require('./speech.js').speech;
 bridge.connect();
+var spotify;
 var cleverbot;
 bridge.getService('cleverbot',function(obj){
   cleverbot = obj;
@@ -12,7 +13,7 @@ var curSpeak = null;
 var speaking = false;
 var sampleRate = 32000;
 var spawn = require('child_process').spawn;
-var SPEAKING_THRESHOLD = -27;
+var SPEAKING_THRESHOLD = -20;
 var record = spawn('rec',['-b','16','-e','signed-integer','-c','1','-r',sampleRate,'-p']);
 record.stdout.on('data', function (d) {
   fs.writeFile('temp',d);
@@ -24,14 +25,17 @@ record.stdout.on('data', function (d) {
       if (splt[i].indexOf("RMS lev dB")!=-1){
         var vol = parseFloat(splt[i].match(/[-]?[0-9]+\.[0-9]+/)[0]);
         if (vol > SPEAKING_THRESHOLD){
+          console.log("LOUD");
           if (speaking){
             curSpeak = Buffer.concat(curSpeak,d);
           } else {
             curSpeak = d;
             speaking = true;
+            console.log("SPEAKING");
           }
         } else {
           if (speaking){
+            console.log("DONE SPEAKING");
             fs.writeFile('full.raw',curSpeak);
             var temp = spawn('sox',['-c','2','-b','16','-e','signed-integer','-r',sampleRate,'-t','raw','full.raw','temp.flac']);
             temp.on('exit',function(code){
@@ -39,11 +43,20 @@ record.stdout.on('data', function (d) {
               temp2.on('exit',function(code){
                 fs.readFile('final.flac',function(err, data){
                   speech.query(data,function(output){
+                    console.log(output);
+                    //if (output.indexOf("jarvis") != -1){
+                      command = output.split(" ");
+                      if (command[0].indexOf("play") != -1){
+                        song = command.slice(1).join(" ");
+                        spotify.searchAndPlay(song);
+                      }
+                   // }
                     console.log("YOU SAID: "+output);
-                    cleverbot.ask(output,function(response){
+                    /*cleverbot.ask(output,function(response){
                       console.log("HE SAYS: "+response);
                       var temp2 = spawn('espeak',["'"+response+"'",'--punct="<characters>"']);
                     });
+                    */
                   });
                 });
               });

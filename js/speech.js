@@ -17,8 +17,10 @@ function post(data, callback) {
 
   var req = http.request(options, function(res) {
     res.on('error',function(){
+      console.log(arguments);
     });
     res.on('data', function (chunk) {
+      console.log(chunk.toString('ascii'));
       var result = JSON.parse(chunk.toString());
       if (result.status == 0){
         for (var i in result.hypotheses){
@@ -36,7 +38,7 @@ function post(data, callback) {
 }
 var speech = {
   query:function(data,callback){
-          post(data,callback);
-        }
+    post(data,callback);
+  }
 }
 exports.speech = speech;
