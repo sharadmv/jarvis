@@ -12,8 +12,8 @@ void setup(){
 void loop(){
   //servo from 0 to 180 degrees
   switchServo.write(90);
-  delay(1000);
+  delay(2000);
   switchServo.write(0);
-  delay(1000);
+  delay(2000);
   
 }
