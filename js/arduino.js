@@ -1,7 +1,7 @@
 var serialport = require('serialport');
 var Serial = serialport.SerialPort;
 
-var TERMINATOR = "\n";
+var TERMINATOR = "\0";
 
 var Packet = function() {
   this.serialize = function() {
@@ -14,7 +14,7 @@ Packet.deserialize = function(serial) {
 
 var init = function(port, options) {
   var serial = new Serial(port, {
-    parser: serialport.parsers.readline("\0")
+    parser: serialport.parsers.readline(TERMINATOR)
   });
   var transport = new Transporter(serial, 10);
   setTimeout(transport.trigger, 2000);
@@ -124,5 +124,4 @@ var Transporter = function(serial, size) {
     }
 }
 
-module.exports = init;
 module.exports = init;
