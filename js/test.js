@@ -1,2 +1,7 @@
 var Arduino = require("./arduino.js");
-new Arduino("/dev/ttyACM0", {});
+var blah = new Arduino("/dev/ttyACM1", { });
+blah.ready(function() {
+    blah.send("i command thee", function() {
+        console.log("SENT")
+    })
+})
