@@ -1,9 +1,17 @@
 var Arduino = require("./arduino.js");
-var blah = new Arduino("/dev/ttyACM1", { });
-blah.ready(function() {
-    setInterval(function(){
-        blah.send("i command thee", function() {
-            console.log("SENT")
-        })
-    },200);
-})
+var arduino = new Arduino("/dev/ttyACM1", {});
+arduino.ready(function() {
+
+    arduino.servo.init(7, function() {
+        arduino.servo.turn(0);
+    });
+    arduino.pin.init(13, function() {
+        setInterval(function() {
+            arduino.pin.digitalWrite(13, true);
+            setTimeout(function() {
+                arduino.pin.digitalWrite(13, false);
+            }, 500);
+        }, 1000);
+    });
+
+});

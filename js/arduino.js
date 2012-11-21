@@ -17,10 +17,45 @@ var init = function(port, options) {
     parser: serialport.parsers.readline(TERMINATOR)
   });
   var transport = new Transporter(serial, 10);
-  setTimeout(transport.trigger, 2000);
+  var arduino = new Arduino(transport);
 
-  return transport;
+  return arduino;
 }
+
+var Arduino = function(transport) {
+    var onReady;
+    this.ready = function(callback) {
+        onReady = callback;
+    }
+    this.trigger = function() {
+        onReady();
+    }
+    this.servo = {
+        init : function(pin, callback) {
+            transport.send("initServo"+pin, callback);
+        },
+        turn : function(angle, callback) {
+            transport.send("servo"+angle, callback);
+        }
+    }
+    this.pin = {
+        init : function(pin, callback) {
+            transport.send("initOutput"+pin, callback);
+        },
+        digitalWrite : function(pin, high, callback) {
+            if (high) {
+                transport.send("writeHigh"+pin, callback);
+            } else {
+                transport.send("writeLow"+pin, callback);
+            }
+        },
+        analogWrite : function(pin, amount, callback) {
+            transport.send("writeA"+pin+","+amount, callback);
+        },
+    }
+    setTimeout(this.trigger, 2000);
+}
+
 
 var Transporter = function(serial, size) {
     var size = size;
@@ -43,14 +78,8 @@ var Transporter = function(serial, size) {
     var self = this;
 
     var callback;
-    var rd;
-
-    this.trigger = function() {
-        rd();
-    }
 
     serial.on('data', function(data) {
-        //console.log(data);
         received++;
         var d = data.toString('ascii').split(":");
         var seqnum = parseInt(d[1]);
@@ -60,7 +89,6 @@ var Transporter = function(serial, size) {
                 clearTimeout(timeout);
                 fin();
             } else {
-                //console.log(received, size)
                 if (received == size) {
                     clearTimeout(timeout);
                     pack();
@@ -79,7 +107,9 @@ var Transporter = function(serial, size) {
                 item = queue.pop();
                 self.send(item[0], item[1]);
             }
-            temp();
+            if (temp) {
+                temp();
+            }
         }
     });
 
@@ -105,10 +135,6 @@ var Transporter = function(serial, size) {
         }
     }
 
-    this.ready = function(r) {
-        rd = r;
-    }
-
     this.send = function(str, cb) {
         if (transmitting) {
             queue.unshift([str, cb]);
@@ -124,4 +150,5 @@ var Transporter = function(serial, size) {
     }
 }
 
+module.exports = init;
 module.exports = init;

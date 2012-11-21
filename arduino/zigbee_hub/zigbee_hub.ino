@@ -1,10 +1,10 @@
 #include <SoftwareSerial.h>
+#include <Servo.h>
 
-SoftwareSerial mySerial(13, 12); // RX, TX
+Servo switchServo;
 
 void setup() {
   Serial.begin(9600);
-  mySerial.begin(9600);
 }
 
 String packet = "";
@@ -46,6 +46,25 @@ void loop() {
 }
 
 void execute(String command) {
+  if (command.substring(0,9) == "initServo") {
+    int servo = stringToNumber(command.substring(9));
+    switchServo.attach(servo);
+  } else if (command.substring(0,9) == "initInput") {
+    int pin = stringToNumber(command.substring(10));
+    pinMode(pin, INPUT);
+  } else if (command.substring(0,10) == "initOutput") {
+    int pin = stringToNumber(command.substring(10));
+    pinMode(pin, OUTPUT);
+  } else if (command.substring(0,5) == "servo") {
+    int angle = stringToNumber(command.substring(5));
+    switchServo.write(angle);
+  } else if (command.substring(0,9) == "writeHigh") {
+    int pin = stringToNumber(command.substring(9));
+    digitalWrite(pin, HIGH);
+  } else if (command.substring(0,8) == "writeLow") {
+    int pin = stringToNumber(command.substring(8));
+    digitalWrite(pin, LOW);
+  }
   Serial.print("Received command: ");
   Serial.print(command);
   Serial.print('\0');
